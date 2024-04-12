@@ -6,12 +6,14 @@ local endTimer = true
 
 M.setup = function(opts)
     -- Set default mappings or whatnot
+    -- A opt for that takes a function that decides how the todo opens
     -- Ex: time
     opts = opts or {}
 
     M.create_todo()
 
     vim.keymap.set('n', '<leader>q', function()
+        vim.cmd('q')
         M.close_todo()
     end, { buffer = bufnr })
 end
@@ -27,7 +29,11 @@ M.create_todo = function()
 end
 
 M.open_todo = function()
-    vim.api.nvim_set_current_buf(bufnr)
+    vim.cmd('rightbelow vsplit')
+
+    local win = vim.api.nvim_get_current_win()
+
+    vim.api.nvim_win_set_buf(win, bufnr)
 end
 
 -- Wait 10 seconds
