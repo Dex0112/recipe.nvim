@@ -5,13 +5,17 @@ local bufnr = nil
 local win = nil
 local augroup = vim.api.nvim_create_augroup('TodoList', { clear = true })
 
+local timerEnd = true
+
+--TODO: Add saving behaviour based on working directory for easy pickup
+
 M.setup = function(opts)
     -- Set default mappings or whatnot
     -- A opt for that takes a function that decides how the todo opens
     -- Ex: time
     opts = opts or {
         time = 10 * 60 * 1000,
-        open_todo = function ()
+        open_todo = function()
             vim.cmd('rightbelow vsplit')
 
             win = vim.api.nvim_get_current_win()
@@ -28,9 +32,13 @@ M.setup = function(opts)
         group = augroup,
         buffer = bufnr,
         callback = function()
-            vim.defer_fn(function()
-                M.open_todo()
-            end, opts['time'])
+            if timerEnd then
+                timerEnd = false
+                vim.defer_fn(function()
+                    M.open_todo()
+                    timerEnd = true
+                end, opts['time'])
+            end
         end
     })
 end
