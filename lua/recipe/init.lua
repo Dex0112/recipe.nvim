@@ -17,9 +17,7 @@ local todo_elements = {
 
 
 --TODO: Add saving behaviour based on working directory for easy pip
---
--- ● ball
--- { "─", "│", "─", "│", "╭", "╮", "╯", "╰" }
+
 function M.setup(opts)
     -- Set default mappings or whatnot
     -- A opt for that takes a function that decides how the todo opens
@@ -31,6 +29,7 @@ function M.setup(opts)
 end
 
 function M.end_todo()
+    -- TODO
 end
 
 function M.toggle_menu()
@@ -39,7 +38,6 @@ function M.toggle_menu()
         vim.api.nvim_win_close(popup_win_id, true)
 
         popup_win_id = nil
-        popup_bufnr = nil
         return
     end
 
@@ -47,6 +45,8 @@ function M.toggle_menu()
     popup_win_id = popup_window.win_id
     popup_bufnr = popup_window.bufnr
 
+    -- Maybe set the ● in like the sign column or something so you can just edit 
+    -- vim.api.nvim_buf_set_option(popup_bufnr, "modifiable", false) if this doesn't work
     for i = 0, #todo_elements - 1, 1 do
         vim.api.nvim_buf_set_lines(popup_bufnr, i, i, false, { "● " .. todo_elements[i + 1] })
     end
@@ -55,18 +55,30 @@ function M.toggle_menu()
     vim.keymap.set('n', '<CR>', function()
         local idx = vim.api.nvim_win_get_cursor(popup_win_id)[1]
         print("You are on line " .. idx)
+
+        -- Goto new buffer with this popup in it
     end, { buffer = popup_bufnr })
 
+    vim.keymap.set('n', 'q', function()
+        -- We need to save
+        M.toggle_menu()
+    end, { buffer = popup_bufnr })
 
-    vim.api.nvim_buf_set_option(popup_bufnr, "modifiable", false)
+    -- TODO: add keymaps for marking complete and unmarking complete 
+    -- vim.keymap.set('n', 'a', function()
+        -- Create new todo item
+    -- end)
+
+    -- vim.keymap.set('n', '', function()
+        -- Edit item
+    -- end)
 end
 
 function M.create_overview()
     local width = 80
     local height = 40
     local borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" }
-    local bufnr = vim.api.nvim_create_buf(false, true)
-
+    local bufnr = popup_bufnr or vim.api.nvim_create_buf(false, true)
 
     local recipe_win_id, win = popup.create(bufnr, {
         title = "Recipe Overview",
