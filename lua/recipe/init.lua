@@ -32,12 +32,28 @@ function M.end_todo()
     -- TODO
 end
 
+function M.save()
+    local new_list = vim.api.nvim_buf_get_lines(popup_bufnr, 0, -1, false)
+
+    for i, value in ipairs(new_list) do
+        print(i .. ': ' .. value)
+    end
+end
+
 function M.toggle_menu()
     if popup_win_id ~= nil and vim.api.nvim_win_is_valid(popup_win_id) then
         -- close popup
+
+        -- save
+        M.save()
+
         vim.api.nvim_win_close(popup_win_id, true)
 
+
         popup_win_id = nil
+        -- Either keep commented or this or save on close
+        popup_bufnr = nil
+
         return
     end
 
@@ -45,11 +61,12 @@ function M.toggle_menu()
     popup_win_id = popup_window.win_id
     popup_bufnr = popup_window.bufnr
 
-    -- Maybe set the ● in like the sign column or something so you can just edit 
+    -- Maybe set the ● in like the sign column or something so you can just edit
     -- vim.api.nvim_buf_set_option(popup_bufnr, "modifiable", false) if this doesn't work
-    for i = 0, #todo_elements - 1, 1 do
-        vim.api.nvim_buf_set_lines(popup_bufnr, i, i, false, { "● " .. todo_elements[i + 1] })
-    end
+    vim.api.nvim_buf_set_lines(popup_bufnr, 0, -1, false, todo_elements)
+    -- for i = 0, #todo_elements - 1, 1 do
+    --     vim.api.nvim_buf_set_lines(popup_bufnr, i, i, false, { todo_elements[i + 1] })
+    -- end
 
     -- apply keymaps and whatever
     vim.keymap.set('n', '<CR>', function()
@@ -64,20 +81,23 @@ function M.toggle_menu()
         M.toggle_menu()
     end, { buffer = popup_bufnr })
 
-    -- TODO: add keymaps for marking complete and unmarking complete 
+    -- TODO: add keymaps for marking complete and unmarking complete
     -- vim.keymap.set('n', 'a', function()
-        -- Create new todo item
+    -- Create new todo item
     -- end)
 
     -- vim.keymap.set('n', '', function()
-        -- Edit item
+    -- Edit item
     -- end)
 end
 
 function M.create_overview()
     local width = 80
-    local height = 40
+    local height = 20
     local borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" }
+    -- use this option if you don't save the state
+    -- local bufnr = vim.api.nvim_create_buf(false, false)
+    -- Save buffer locally
     local bufnr = popup_bufnr or vim.api.nvim_create_buf(false, true)
 
     local recipe_win_id, win = popup.create(bufnr, {
